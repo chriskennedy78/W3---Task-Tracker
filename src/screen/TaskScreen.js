@@ -6,24 +6,11 @@ import {
     TextInput,
     TouchableOpacity,
     View,
+    Modal,
 } from "react-native";
 import { IconButton } from "react-native-paper";
 import FallbackImage from "../components/FallbackImage";
 
-// const dummyData = [
-//     {
-//         id: "01",
-//         title: "Wash Car",
-//         who: "Chris",
-//         when: "today",
-//     },
-//     {
-//         id: "02",
-//         title: "Walk dogs",
-//         who: "Jill and Chris",
-//         when: "Daily",
-//     },
-// ];
 const TaskScreen = () => {
     // initial local state
     const [choreWhat, setChoreWhat] = useState("");
@@ -32,14 +19,10 @@ const TaskScreen = () => {
     const [choreList, setChoreList] = useState([]);
     const [editedChore, setEditedChore] = useState(null);
     const [completedChores, setCompletedChores] = useState([]);
+    const [modalVisible, setModalVisible] = useState(false);
 
     // handle adding a chore
     const handleAddChore = () => {
-        // structure of single item
-        // { id:
-        // title:
-        // who:
-        // when:}
         // id set to date string will give chore a unique number
 
         if (choreWhat === "" || choreWho === "" || choreWhen === "") {
@@ -79,6 +62,7 @@ const TaskScreen = () => {
 
         setCompletedChores(updatedCompletedChores);
     };
+
     const handleUpdateChore = () => {
         const updatedChores = choreList.map((item) => {
             if (item.id === editedChore.id) {
@@ -146,7 +130,10 @@ const TaskScreen = () => {
                         <IconButton
                             icon="pencil"
                             iconColor="#fff"
-                            onPress={() => handleEditChore(item)}
+                            onPress={() => {
+                                handleEditChore(item);
+                                setModalVisible(true);
+                            }}
                         />
                         <IconButton
                             icon="trash-can"
@@ -163,46 +150,70 @@ const TaskScreen = () => {
             <View style={styles.titleView}>
                 <Text style={styles.titleView}>W3 Chores</Text>
             </View>
-
-            <TextInput
-                style={styles.taskInput}
-                placeholder="WHO: Assign Chore"
-                value={choreWho}
-                onChangeText={(userText) => setChoreWho(userText)}
-            />
-            <TextInput
-                style={styles.taskInput}
-                placeholder="WHAT: Assign Chore"
-                value={choreWhat}
-                onChangeText={(userText) => setChoreWhat(userText)}
-            />
-            <TextInput
-                style={styles.taskInput}
-                placeholder="WHEN: Assign Due Date"
-                value={choreWhen}
-                onChangeText={(userText) => setChoreWhen(userText)}
-            />
-            {editedChore ? (
-                <TouchableOpacity
-                    style={styles.touchableOpacity}
-                    onPress={() => handleUpdateChore()}
+            <View>
+                <Modal
+                    animationType="slide"
+                    visible={modalVisible}
+                    onRequestClose={() => {
+                        Alert.alert("Chore has been closed.");
+                        setModalVisible(!modalVisible);
+                    }}
                 >
-                    <Text style={styles.touchableOpacityText}>
-                        Update Chore
-                    </Text>
-                </TouchableOpacity>
-            ) : (
-                <TouchableOpacity
-                    style={styles.touchableOpacity}
-                    onPress={() => handleAddChore()}
-                >
-                    <Text style={styles.touchableOpacityText}>Add Chore</Text>
-                </TouchableOpacity>
-            )}
+                    <TextInput
+                        style={styles.taskInput}
+                        placeholder="WHO: Assign Chore"
+                        value={choreWho}
+                        onChangeText={(userText) => setChoreWho(userText)}
+                    />
+                    <TextInput
+                        style={styles.taskInput}
+                        placeholder="WHAT: Assign Chore"
+                        value={choreWhat}
+                        onChangeText={(userText) => setChoreWhat(userText)}
+                    />
+                    <TextInput
+                        style={styles.taskInput}
+                        placeholder="WHEN: Assign Due Date"
+                        value={choreWhen}
+                        onChangeText={(userText) => setChoreWhen(userText)}
+                    />
+                    {editedChore ? (
+                        <TouchableOpacity
+                            style={styles.touchableOpacity}
+                            onPress={() => {
+                                handleUpdateChore();
+                                setModalVisible(false);
+                            }}
+                        >
+                            <Text style={styles.touchableOpacityText}>
+                                Update Chore
+                            </Text>
+                        </TouchableOpacity>
+                    ) : (
+                        <TouchableOpacity
+                            style={styles.touchableOpacity}
+                            onPress={() => {
+                                handleAddChore();
+                                setModalVisible(false);
+                            }}
+                        >
+                            <Text style={styles.touchableOpacityText}>
+                                Add Chore
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                </Modal>
+            </View>
 
             {/* Render Chore List */}
             <FlatList data={choreList} renderItem={renderChore} />
             {choreList.length <= 0 && <FallbackImage />}
+            <TouchableOpacity
+                style={styles.touchableOpacity}
+                onPress={() => setModalVisible(true)}
+            >
+                <Text style={styles.touchableOpacityText}>Add Chore</Text>
+            </TouchableOpacity>
         </View>
     );
 };
@@ -252,11 +263,6 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         marginBottom: 8,
         flexDirection: "column",
-        // alignItems: "flex-start",
-        // shadowColor: "#324aa8",
-        // shadowOffset: { width: 0, height: 2 },
-        // shadowOpacity: 0.8,
-        // shadowRadius: 3,
     },
     taskOutputButtons: {
         backgroundColor: "#324aa8",
@@ -274,6 +280,14 @@ const styles = StyleSheet.create({
     completedText: {
         textDecorationLine: "line-through",
         color: "#eb4034",
+    },
+    modalView: {
+        margin: 20,
+        backgroundColor: "white",
+        borderRadius: 20,
+        padding: 35,
+        alignItems: "center",
+        borderColor: "#eb4034",
     },
 });
 
