@@ -26,7 +26,9 @@ import FallbackImage from "../components/FallbackImage";
 // ];
 const TaskScreen = () => {
     // initial local state
-    const [chore, setChore] = useState("");
+    const [choreWhat, setChoreWhat] = useState("");
+    const [choreWho, setChoreWho] = useState("");
+    const [choreWhen, setChoreWhen] = useState("");
     const [choreList, setChoreList] = useState([]);
     const [editedChore, setEditedChore] = useState(null);
     const [completedChores, setCompletedChores] = useState([]);
@@ -35,17 +37,27 @@ const TaskScreen = () => {
     const handleAddChore = () => {
         // structure of single item
         // { id:
-        // title:}
-        // id set to string will give chore a unique number
+        // title:
+        // who:
+        // when:}
+        // id set to date string will give chore a unique number
 
-        if (chore === "") {
+        if (choreWhat === "" || choreWho === "" || choreWhen === "") {
             return; // early return
         }
         setChoreList([
             ...choreList,
-            { id: Date.now().toString(), title: chore },
+            {
+                id: Date.now().toString(),
+                title: choreWhat,
+                who: choreWho,
+                when: choreWhen,
+            },
         ]);
-        setChore("");
+        setChoreWho("");
+        setChoreWhat("");
+
+        setChoreWhen("");
     };
     const handleDeleteChore = (id) => {
         const updatedChoreList = choreList.filter((chore) => chore.id !== id);
@@ -54,7 +66,9 @@ const TaskScreen = () => {
 
     const handleEditChore = (chore) => {
         setEditedChore(chore);
-        setChore(chore.title);
+        setChoreWhat(chore.title);
+        setChoreWho(chore.who);
+        setChoreWhen(chore.when);
     };
 
     //to mark as complete
@@ -68,47 +82,79 @@ const TaskScreen = () => {
     const handleUpdateChore = () => {
         const updatedChores = choreList.map((item) => {
             if (item.id === editedChore.id) {
-                return { ...item, title: chore };
+                return {
+                    ...item,
+                    title: choreWhat,
+                    who: choreWho,
+                    when: choreWhen,
+                };
             }
 
             return item;
         });
         setChoreList(updatedChores);
         setEditedChore(null);
-        setChore("");
+        setChoreWhat("");
+        setChoreWho("");
+        setChoreWhen("");
     };
     const renderChore = ({ item, index }) => {
         const isCompleted = completedChores.includes(item.id);
         return (
-            <View style={styles.taskOutput}>
-                <TouchableOpacity onPress={() => handleToggleComplete(item.id)}>
-                    <IconButton
-                        icon={
-                            isCompleted ? "checkbox-marked" : "checkbox-blank"
-                        }
-                        iconColor="#fff"
-                    />
-                </TouchableOpacity>
-                <Text
-                    style={[
-                        styles.taskOutputText,
-                        isCompleted && styles.completedText,
-                    ]}
-                >
-                    {item.title}
-                </Text>
-                {/* <Text>Who: {item.who}</Text> */}
-                {/* <Text>When: {item.when}</Text> */}
-                <IconButton
-                    icon="pencil"
-                    iconColor="#fff"
-                    onPress={() => handleEditChore(item)}
-                />
-                <IconButton
-                    icon="trash-can"
-                    iconColor="#fff"
-                    onPress={() => handleDeleteChore(item.id)}
-                />
+            <View>
+                <View style={styles.taskOutput}>
+                    <Text
+                        style={[
+                            styles.taskOutputText,
+                            isCompleted && styles.completedText,
+                        ]}
+                    >
+                        Who: {item.who}
+                    </Text>
+
+                    <Text
+                        style={[
+                            styles.taskOutputText,
+                            isCompleted && styles.completedText,
+                        ]}
+                    >
+                        What: {item.title}
+                    </Text>
+                    <Text
+                        style={[
+                            styles.taskOutputText,
+                            isCompleted && styles.completedText,
+                        ]}
+                    >
+                        When: {item.when}
+                    </Text>
+
+                    <View style={styles.taskOutputButtons}>
+                        <TouchableOpacity
+                            onPress={() => handleToggleComplete(item.id)}
+                        >
+                            <IconButton
+                                icon={
+                                    isCompleted
+                                        ? "checkbox-marked"
+                                        : "checkbox-blank"
+                                }
+                                iconColor="#fff"
+                            />
+                        </TouchableOpacity>
+
+                        <IconButton
+                            icon="pencil"
+                            iconColor="#fff"
+                            onPress={() => handleEditChore(item)}
+                        />
+                        <IconButton
+                            icon="trash-can"
+                            iconColor="#fff"
+                            onPress={() => handleDeleteChore(item.id)}
+                        />
+                    </View>
+                </View>
             </View>
         );
     };
@@ -117,13 +163,25 @@ const TaskScreen = () => {
             <View style={styles.titleView}>
                 <Text style={styles.titleView}>W3 Chores</Text>
             </View>
+
             <TextInput
                 style={styles.taskInput}
-                placeholder="Add a Chore"
-                value={chore}
-                onChangeText={(userText) => setChore(userText)}
+                placeholder="WHO: Assign Chore"
+                value={choreWho}
+                onChangeText={(userText) => setChoreWho(userText)}
             />
-
+            <TextInput
+                style={styles.taskInput}
+                placeholder="WHAT: Assign Chore"
+                value={choreWhat}
+                onChangeText={(userText) => setChoreWhat(userText)}
+            />
+            <TextInput
+                style={styles.taskInput}
+                placeholder="WHEN: Assign Due Date"
+                value={choreWhen}
+                onChangeText={(userText) => setChoreWhen(userText)}
+            />
             {editedChore ? (
                 <TouchableOpacity
                     style={styles.touchableOpacity}
@@ -161,6 +219,7 @@ const styles = StyleSheet.create({
         paddingVertical: 8,
         paddingHorizontal: 16,
         fontSize: 20,
+        marginBottom: 5,
     },
     touchableOpacity: {
         backgroundColor: "#000",
@@ -191,13 +250,19 @@ const styles = StyleSheet.create({
         borderRadius: 6,
         paddingHorizontal: 6,
         paddingVertical: 8,
-        marginBottom: 12,
+        marginBottom: 8,
+        flexDirection: "column",
+        // alignItems: "flex-start",
+        // shadowColor: "#324aa8",
+        // shadowOffset: { width: 0, height: 2 },
+        // shadowOpacity: 0.8,
+        // shadowRadius: 3,
+    },
+    taskOutputButtons: {
+        backgroundColor: "#324aa8",
+        borderRadius: 6,
         flexDirection: "row",
-        alignItems: "center",
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.8,
-        shadowRadius: 3,
+        alignSelf: "flex-end",
     },
     taskOutputText: {
         color: "#fff",
