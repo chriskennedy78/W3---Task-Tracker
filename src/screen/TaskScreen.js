@@ -10,25 +10,26 @@ import {
 import { IconButton } from "react-native-paper";
 import FallbackImage from "../components/FallbackImage";
 
-const dummyData = [
-    {
-        id: "01",
-        title: "Wash Car",
-        who: "Chris",
-        when: "today",
-    },
-    {
-        id: "02",
-        title: "Walk dogs",
-        who: "Jill and Chris",
-        when: "Daily",
-    },
-];
+// const dummyData = [
+//     {
+//         id: "01",
+//         title: "Wash Car",
+//         who: "Chris",
+//         when: "today",
+//     },
+//     {
+//         id: "02",
+//         title: "Walk dogs",
+//         who: "Jill and Chris",
+//         when: "Daily",
+//     },
+// ];
 const TaskScreen = () => {
     // initial local state
     const [chore, setChore] = useState("");
     const [choreList, setChoreList] = useState([]);
     const [editedChore, setEditedChore] = useState(null);
+    const [completedChores, setCompletedChores] = useState([]);
 
     // handle adding a chore
     const handleAddChore = () => {
@@ -56,6 +57,14 @@ const TaskScreen = () => {
         setChore(chore.title);
     };
 
+    //to mark as complete
+    const handleToggleComplete = (id) => {
+        const updatedCompletedChores = completedChores.includes(id)
+            ? completedChores.filter((taskId) => taskId !== id)
+            : [...completedChores, id];
+
+        setCompletedChores(updatedCompletedChores);
+    };
     const handleUpdateChore = () => {
         const updatedChores = choreList.map((item) => {
             if (item.id === editedChore.id) {
@@ -69,10 +78,26 @@ const TaskScreen = () => {
         setChore("");
     };
     const renderChore = ({ item, index }) => {
+        const isCompleted = completedChores.includes(item.id);
         return (
             <View style={styles.taskOutput}>
+                <TouchableOpacity onPress={() => handleToggleComplete(item.id)}>
+                    <IconButton
+                        icon={
+                            isCompleted ? "checkbox-marked" : "checkbox-blank"
+                        }
+                        iconColor="#fff"
+                    />
+                </TouchableOpacity>
+                <Text
+                    style={[
+                        styles.taskOutputText,
+                        isCompleted && styles.completedText,
+                    ]}
+                >
+                    {item.title}
+                </Text>
                 {/* <Text>Who: {item.who}</Text> */}
-                <Text style={styles.taskOutputText}>{item.title}</Text>
                 {/* <Text>When: {item.when}</Text> */}
                 <IconButton
                     icon="pencil"
@@ -180,6 +205,10 @@ const styles = StyleSheet.create({
         fontSize: 20,
         flex: 1,
         alignItems: "center",
+    },
+    completedText: {
+        textDecorationLine: "line-through",
+        color: "#eb4034",
     },
 });
 
