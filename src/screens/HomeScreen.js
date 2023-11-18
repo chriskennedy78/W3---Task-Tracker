@@ -1,21 +1,29 @@
 import React, { useState } from "react";
 import {
     FlatList,
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View,
     Modal,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
-import { IconButton } from "react-native-paper";
+import { IconButton, Button } from "react-native-paper";
+import { DatePickerModal } from "react-native-paper-dates";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import FallbackImage from "../components/FallbackImage";
+import { en, registerTranslation } from "react-native-paper-dates";
+registerTranslation("en", en);
 
-const TaskScreen = () => {
+const HomeScreen = () => {
     // initial local state
     const [choreWhat, setChoreWhat] = useState("");
     const [choreWho, setChoreWho] = useState("");
-    const [choreWhen, setChoreWhen] = useState("");
+    const [choreWhen, setChoreWhen] = useState();
     const [choreList, setChoreList] = useState([]);
     const [editedChore, setEditedChore] = useState(null);
     const [completedChores, setCompletedChores] = useState([]);
@@ -39,8 +47,30 @@ const TaskScreen = () => {
         ]);
         setChoreWho("");
         setChoreWhat("");
-
         setChoreWhen("");
+    };
+    const handleDataIncomplete = () => {
+        if (choreWhat === "" || choreWho === "" || choreWhen === "") {
+            return Alert.alert(
+                "Chore has incomplete data",
+                "Complete the WHO, WHAT, and WHEN",
+                [
+                    {
+                        text: "Try Again",
+                        onPress: () => setModalVisible(true),
+                    },
+                    {
+                        text: "Cancel",
+                        onPress: () => {
+                            setModalVisible(false);
+                            setChoreWhat("");
+                            setChoreWho("");
+                            setChoreWhen("");
+                        },
+                    },
+                ]
+            );
+        }
     };
     const handleDeleteChore = (id) => {
         const updatedChoreList = choreList.filter((chore) => chore.id !== id);
@@ -53,7 +83,6 @@ const TaskScreen = () => {
         setChoreWho(chore.who);
         setChoreWhen(chore.when);
     };
-
     //to mark as complete
     const handleToggleComplete = (id) => {
         const updatedCompletedChores = completedChores.includes(id)
@@ -62,7 +91,6 @@ const TaskScreen = () => {
 
         setCompletedChores(updatedCompletedChores);
     };
-
     const handleUpdateChore = () => {
         const updatedChores = choreList.map((item) => {
             if (item.id === editedChore.id) {
@@ -146,75 +174,83 @@ const TaskScreen = () => {
         );
     };
     return (
-        <View style={styles.container}>
-            <View style={styles.titleView}>
-                <Text style={styles.titleView}>W3 Chores</Text>
-            </View>
-            <View>
-                <Modal
-                    animationType="slide"
-                    visible={modalVisible}
-                    onRequestClose={() => {
-                        Alert.alert("Chore has been closed.");
-                        setModalVisible(!modalVisible);
-                    }}
-                >
-                    <TextInput
-                        style={styles.taskInput}
-                        placeholder="WHO: Assign Chore"
-                        value={choreWho}
-                        onChangeText={(userText) => setChoreWho(userText)}
-                    />
-                    <TextInput
-                        style={styles.taskInput}
-                        placeholder="WHAT: Assign Chore"
-                        value={choreWhat}
-                        onChangeText={(userText) => setChoreWhat(userText)}
-                    />
-                    <TextInput
-                        style={styles.taskInput}
-                        placeholder="WHEN: Assign Due Date"
-                        value={choreWhen}
-                        onChangeText={(userText) => setChoreWhen(userText)}
-                    />
-                    {editedChore ? (
-                        <TouchableOpacity
-                            style={styles.touchableOpacity}
-                            onPress={() => {
-                                handleUpdateChore();
-                                setModalVisible(false);
-                            }}
-                        >
-                            <Text style={styles.touchableOpacityText}>
-                                Update Chore
-                            </Text>
-                        </TouchableOpacity>
-                    ) : (
-                        <TouchableOpacity
-                            style={styles.touchableOpacity}
-                            onPress={() => {
-                                handleAddChore();
-                                setModalVisible(false);
-                            }}
-                        >
-                            <Text style={styles.touchableOpacityText}>
-                                Add Chore
-                            </Text>
-                        </TouchableOpacity>
-                    )}
-                </Modal>
-            </View>
+        <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : "height"}
+            style={styles.container}
+        >
+            <View style={styles.container}>
+                <View style={styles.titleView}>
+                    <Text style={styles.titleView}>W3 Chores</Text>
+                    <Text>Who-What-When</Text>
+                </View>
+                <View>
+                    <Modal
+                        style={styles.modalContent}
+                        animationType="slide"
+                        visible={modalVisible}
+                    >
+                        <TextInput
+                            style={styles.taskInput}
+                            placeholder="WHO: Assign Chore"
+                            value={choreWho}
+                            onChangeText={(userText) => setChoreWho(userText)}
+                        />
+                        <TextInput
+                            style={styles.taskInput}
+                            placeholder="WHAT: Assign Chore"
+                            value={choreWhat}
+                            onChangeText={(userText) => setChoreWhat(userText)}
+                        />
+                        <TextInput
+                            style={styles.taskInput}
+                            placeholder="WHEN: Assign Due Date"
+                            value={choreWhen}
+                            onChangeText={(userText) => setChoreWhen(userText)}
+                        />
 
-            {/* Render Chore List */}
-            <FlatList data={choreList} renderItem={renderChore} />
-            {choreList.length <= 0 && <FallbackImage />}
-            <TouchableOpacity
-                style={styles.touchableOpacity}
-                onPress={() => setModalVisible(true)}
-            >
-                <Text style={styles.touchableOpacityText}>Add Chore</Text>
-            </TouchableOpacity>
-        </View>
+                        {editedChore ? (
+                            <TouchableOpacity
+                                style={styles.touchableOpacity}
+                                onPress={() => {
+                                    handleUpdateChore();
+                                    setModalVisible(false);
+                                }}
+                            >
+                                <Text style={styles.touchableOpacityText}>
+                                    Update Chore
+                                </Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity
+                                style={styles.touchableOpacity}
+                                onPress={() => {
+                                    handleAddChore();
+                                    setModalVisible(false);
+                                    handleDataIncomplete();
+                                }}
+                            >
+                                <Text style={styles.touchableOpacityText}>
+                                    Add Chore
+                                </Text>
+                            </TouchableOpacity>
+                        )}
+                    </Modal>
+                </View>
+                {/* Render Chore List */}
+                <View>
+                    <FlatList data={choreList} renderItem={renderChore} />
+                    {choreList.length <= 0 && <FallbackImage />}
+                    <TouchableOpacity
+                        style={styles.touchableOpacity}
+                        onPress={() => setModalVisible(true)}
+                    >
+                        <Text style={styles.touchableOpacityText}>
+                            Add Chore
+                        </Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </KeyboardAvoidingView>
     );
 };
 
@@ -289,105 +325,12 @@ const styles = StyleSheet.create({
         alignItems: "center",
         borderColor: "#eb4034",
     },
+
+    modalContent: {
+        justifyContent: "center",
+        alignItems: "center",
+        margin: 0,
+    },
 });
 
-export default TaskScreen;
-
-// From App.js file
-
-// const [task, setTask] = useState();
-//     const [taskItems, setTaskItems] = useState([]);
-
-//     const handleAddTask = () => {
-//         Keyboard.dismiss();
-//         setTaskItems([...taskItems, task]);
-//         setTask(null);
-//     };
-
-//     const completeTask = (index) => {
-//         let itemsCopy = [...taskItems];
-//         itemsCopy.splice(index, 1);
-//         setTaskItems(itemsCopy);
-//     };
-
-//     {/* Todays Tasks */}
-//     <View style={styles.taskWrapper}>
-//     <Text style={styles.sectionTitle}>Today's Tasks</Text>
-//     <View style={styles.items}>
-//         {/* This is where tasks go */}
-//         {taskItems.map((item, index) => {
-//             return (
-//                 <TouchableOpacity
-//                     key={index}
-//                     onPress={() => completeTask(task)}
-//                 >
-//                     <Task text={item} />
-//                 </TouchableOpacity>
-//             );
-//         })}
-//     </View>
-// </View>
-// {/* Write a Task */}
-// <KeyboardAvoidingView
-//     behavior={Platform.OS === "ios" ? "padding" : "height"}
-//     style={styles.writeTaskWrapper}
-// >
-//     <TextInput
-//         style={styles.input}
-//         placeholder={"write a task"}
-//         value={task}
-//         onChangeText={(text) => setTask(text)}
-//     />
-//     <TouchableOpacity onPress={() => handleAddTask()}>
-//         <View style={styles.addWrapper}>
-//             <Text style={styles.addText}>+</Text>
-//         </View>
-//     </TouchableOpacity>
-// </KeyboardAvoidingView>
-
-// const styles = StyleSheet.create({
-//     container: {
-//         flex: 1,
-//         backgroundColor: "#E8EAED",
-//     },
-
-//     taskWrapper: {
-//         paddingTop: 80,
-//         paddingHorizontal: 20,
-//     },
-//     sectionTitle: {
-//         fontSize: 24,
-//         fontWeight: "bold",
-//     },
-//     items: {
-//         marginTop: 30,
-//     },
-//     writeTaskWrapper: {
-//         position: "absolute",
-//         bottom: 60,
-//         width: "100%",
-//         flexDirection: "row",
-//         justifyContent: "space-around",
-//         alignItems: "center",
-//     },
-//     input: {
-//         paddingVertical: 15,
-//         paddingHorizontal: 15,
-//         backgroundColor: "#FFF",
-//         borderRadius: 60,
-//         borderColor: "#C0C0C0",
-//         borderWidth: 1,
-//         width: 250,
-//     },
-//     addWrapper: {
-//         width: 60,
-//         height: 60,
-//         backgroundColor: "#FFF",
-//         borderRadius: 60,
-//         justifyContent: "center",
-//         alignItems: "center",
-//         borderColor: "#C0C0C0",
-//         borderWidth: 1,
-//     },
-//     addText: {},
-// });
+export default HomeScreen;
